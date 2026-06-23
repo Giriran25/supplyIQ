@@ -1,0 +1,73 @@
+version: '3.8'
+services:
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: supplyiq_user
+      POSTGRES_PASSWORD: supplyiq_pass
+      POSTGRES_DB: supplyiq
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      API_HOST: ${API_HOST}
+      API_PORT: ${API_PORT}
+      LOG_LEVEL: ${LOG_LEVEL}
+      ENV: ${ENV}
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./:/app:rw
+    command: ["/app/docker/entrypoint.api.sh"]
+
+volumes:
+  db_data:
+version: '3.9'
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-supplyiq}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-supplyiqpass}
+      POSTGRES_DB: ${POSTGRES_DB:-supplyiq}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  api:
+    build: .
+    command: uvicorn app.api.main:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+
+  dashboard:
+    build: .
+    command: streamlit run app/streamlit_app/app.py --server.port 8501 --server.address 0.0.0.0
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    ports:
+      - "8501:8501"
+    depends_on:
+      - api
+
+volumes:
+  db_data:
