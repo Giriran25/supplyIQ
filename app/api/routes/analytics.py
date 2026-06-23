@@ -1,52 +1,124 @@
-from fastapi import APIRouter, Depends, Query
-from sqlalchemy.orm import Session
-from app.core.database import get_db
-from app.schemas.analytics import KPISchema
-from app.models.order import Order
-from app.models.shipment import Shipment
-from app.models.inventory import InventorySnapshot
-from sqlalchemy import func
-
-router = APIRouter()
-
-
-@router.get("/kpis", response_model=KPISchema)
-def get_kpis(db: Session = Depends(get_db)):
-    total_orders = db.query(func.count(Order.id)).scalar() or 0
-    total_shipments = db.query(func.count(Shipment.id)).scalar() or 0
-    avg_lead_time = db.query(func.avg(Shipment.lead_time_days)).scalar()
-    delayed = db.query(func.count(Shipment.id)).filter(Shipment.delayed == True).scalar() or 0
-    delay_rate = None
-    if total_shipments:
-        delay_rate = delayed / total_shipments
-    total_inventory = db.query(func.coalesce(func.sum(InventorySnapshot.quantity), 0)).scalar() or 0
-
-    return KPISchema(
-        total_orders=int(total_orders),
-        total_shipments=int(total_shipments),
-        avg_lead_time=float(avg_lead_time) if avg_lead_time is not None else None,
-        delay_rate=float(delay_rate) if delay_rate is not None else None,
-        total_inventory_items=int(total_inventory),
-    )
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
-from app.api.schemas.analytics import AnalyticsRequest, AnalyticsResponse, SupplierAnalyticsResponse
+from app.api.schemas.analytics import (
+    AnalyticsRequest,
+    AnalyticsResponse,
+    CategoryAnalyticsResponse,
+    ProductAnalyticsResponse,
+    GeographyAnalyticsResponse,
+    ShipmentAnalyticsResponse,
+    SupplierAnalyticsResponse,
+)
 from app.core.database import get_db
 from app.services.analytics import AnalyticsService
 
 router = APIRouter()
 
 
-@router.post("/kpis", response_model=AnalyticsResponse)
-async def get_kpis(request: AnalyticsRequest, db: Session = Depends(get_db)) -> AnalyticsResponse:
-    service = AnalyticsService(db)
-    return service.get_kpis(request)
+@router.get(
+    "/kpis",
+    response_model=AnalyticsResponse,
+    summary="Get KPIs",
+    description="Retrieve top-level KPIs: revenue, orders, customers, products, delay rate, avg lead time",
+)
+async def get_kpis(
+    start_date: str | None = Query(None, description="Start date (YYYY-MM-DD)"),
+    end_date: str | None = Query(None, description="End date (YYYY-MM-DD)"),
+    region: str | None = Query(None, description="Filter by region"),
+    db: Session = Depends(get_db),
+) -> AnalyticsResponse:
+    """Get KPI summary for the organization."""
+    try:
+        request = AnalyticsRequest(start_date=start_date, end_date=end_date, region=region)
+        service = AnalyticsService(db)
+        return service.get_kpis(request)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"KPI calculation failed: {str(e)}")
 
 
-@router.get("/suppliers", response_model=SupplierAnalyticsResponse)
-async def get_supplier_analytics(db: Session = Depends(get_db)) -> SupplierAnalyticsResponse:
-    service = AnalyticsService(db)
-    return service.get_supplier_overview()
+@router.get(
+    "/categories",
+    response_model=CategoryAnalyticsResponse,
+    summary="Get Category Analytics",
+    description="Revenue and order metrics by category",
+)
+async def get_category_analytics(
+    start_date: str | None = Query(None),
+    end_date: str | None = Query(None),
+    region: str | None = Query(None),
+    limit: int = Query(50, ge=1, le=500),
+    db: Session = Depends(get_db),
+) -> CategoryAnalyticsResponse:
+    """Get analytics breakdown by category."""
+    try:
+        request = AnalyticsRequest(start_date=start_date, end_date=end_date, region=region)
+        service = AnalyticsService(db)
+        return service.get_category_analytics(request, limit=limit)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Category analytics failed: {str(e)}")
+
+
+@router.get(
+    "/products",
+    response_model=ProductAnalyticsResponse,
+    summary="Get Product Analytics",
+    description="Top products by units sold and revenue",
+)
+async def get_product_analytics(
+    start_date: str | None = Query(None),
+    end_date: str | None = Query(None),
+    region: str | None = Query(None),
+    limit: int = Query(100, ge=1, le=1000),
+    db: Session = Depends(get_db),
+) -> ProductAnalyticsResponse:
+    """Get top products ranked by revenue."""
+    try:
+        request = AnalyticsRequest(start_date=start_date, end_date=end_date, region=region)
+        service = AnalyticsService(db)
+        return service.get_product_analytics(request, limit=limit)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Product analytics failed: {str(e)}")
+
+
+@router.get(
+    "/geography",
+    response_model=GeographyAnalyticsResponse,
+    summary="Get Geography Analytics",
+    description="Revenue and delay metrics by region and country",
+)
+async def get_geography_analytics(
+    start_date: str | None = Query(None),
+    end_date: str | None = Query(None),
+    region: str | None = Query(None),
+    db: Session = Depends(get_db),
+) -> GeographyAnalyticsResponse:
+    """Get analytics breakdown by geography."""
+    try:
+        request = AnalyticsRequest(start_date=start_date, end_date=end_date, region=region)
+        service = AnalyticsService(db)
+        return service.get_geography_analytics(request)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Geography analytics failed: {str(e)}")
+
+
+@router.get(
+    "/shipments",
+    response_model=ShipmentAnalyticsResponse,
+    summary="Get Shipment Analytics",
+    description="Performance KPIs and breakdown by shipping mode",
+)
+async def get_shipment_analytics(
+    start_date: str | None = Query(None),
+    end_date: str | None = Query(None),
+    db: Session = Depends(get_db),
+) -> ShipmentAnalyticsResponse:
+    """Get shipment performance metrics and mode breakdown."""
+    try:
+        request = AnalyticsRequest(start_date=start_date, end_date=end_date)
+        service = AnalyticsService(db)
+        return service.get_shipment_analytics(request)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Shipment analytics failed: {str(e)}")
