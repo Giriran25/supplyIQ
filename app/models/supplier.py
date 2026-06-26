@@ -14,4 +14,7 @@ class Supplier(Base, TimestampMixin):
     lead_time_std = Column(Float, nullable=False, default=2.0)
     on_time_rate = Column(Float, nullable=False, default=0.9)
 
-    shipments = relationship("Shipment", back_populates="supplier")
+    # NOTE: Legacy model — not part of the current DataCo architecture.
+    # The shipments relationship is disabled because the current Shipment model
+    # has no supplier_id FK. Re-enable if Supplier is integrated into DataCo.
+    # shipments = relationship("Shipment", back_populates="supplier")

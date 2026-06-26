@@ -12,5 +12,4 @@ class SupplierSchema(BaseModel):
     on_time_rate: float
     created_at: Optional[datetime]
 
-    class Config:
-        orm_mode = True
+    model_config = {"from_attributes": True}

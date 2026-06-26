@@ -19,3 +19,5 @@ class DelayPredictionResponse(BaseModel):
     predicted_label: str
     model_name: str
     explanation: Dict[str, float]
+    
+    model_config = {"protected_namespaces": ()}

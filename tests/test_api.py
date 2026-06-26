@@ -7,5 +7,5 @@ client = TestClient(app)
 
 
 def test_root_api_docs() -> None:
-    response = client.get("/docs")
+    response = client.get("/api/docs")
     assert response.status_code == 200

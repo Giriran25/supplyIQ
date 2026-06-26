@@ -3,6 +3,9 @@ from sqlalchemy.orm import relationship
 from app.models.base import Base, TimestampMixin
 from sqlalchemy import func
 
+# NOTE: Legacy models — not part of the current DataCo architecture.
+# Do NOT import this module in app/models/__init__.py.
+# These models will be integrated in a future phase if needed.
 
 class Warehouse(Base, TimestampMixin):
     __tablename__ = "warehouses"
