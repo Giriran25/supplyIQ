@@ -10,7 +10,7 @@ class OrderItem(Base, TimestampMixin):
         CheckConstraint("unit_price >= 0", name="chk_order_items_unit_price_non_negative"),
         CheckConstraint("line_total >= 0", name="chk_order_items_line_total_non_negative"),
         CheckConstraint("discount_rate >= 0 AND discount_rate <= 1", name="chk_order_items_discount_rate_range"),
-        CheckConstraint("profit_ratio >= 0 AND profit_ratio <= 1", name="chk_order_items_profit_ratio_range"),
+        CheckConstraint("profit_ratio >= -1 AND profit_ratio <= 1", name="chk_order_items_profit_ratio_range"),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
