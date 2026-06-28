@@ -104,7 +104,7 @@ def read_csv_chunks(csv_path: Path, chunk_size: int):
         keep_default_na=False,
         na_filter=False,
         chunksize=chunk_size,
-        encoding="utf-8",
+        encoding="latin1",
     )
 
 

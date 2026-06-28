@@ -48,7 +48,7 @@ def create_staging_table() -> Table:
         ]
     )
 
-    return Table("staging_dataco", metadata, *columns)
+    return Table("staging_dataco", metadata, *columns, extend_existing=True)
 
 
 def create_etl_jobs_table() -> Table:
@@ -72,6 +72,7 @@ def create_etl_jobs_table() -> Table:
             onupdate=func.now(),
             nullable=False,
         ),
+        extend_existing=True,
     )
 
 
@@ -88,6 +89,7 @@ def create_etl_errors_table() -> Table:
         Column("target_table", String(100), nullable=True),
         Column("source_payload", JSONB, nullable=True),
         Column("created_at", DateTime(timezone=True), server_default=func.now(), nullable=False),
+        extend_existing=True,
     )
 
 
