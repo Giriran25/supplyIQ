@@ -8,8 +8,9 @@ from app.streamlit_app.utils import run_simulation, format_currency, format_perc
 SCENARIO_MAP = {
     "Supplier Failure": "supplier_failure",
     "Demand Spike": "demand_spike",
-    "Warehouse Shutdown": "warehouse_shutdown",
-    "Transportation Delay": "transportation_delay",
+    "Inventory Shortage": "inventory_shortage",
+    "Transportation Disruption": "transportation_disruption",
+    "Lead Time Increase": "lead_time_increase",
 }
 
 
@@ -45,7 +46,7 @@ def render() -> None:
             st.markdown("---")
             st.markdown(f"### Scenario: {result.get('scenario_name', scenario_label)}")
 
-            col1, col2, col3, col4 = st.columns(4)
+            col1, col2, col3, col4, col5 = st.columns(5)
             with col1:
                 rev_impact = result.get("revenue_impact", 0)
                 st.metric("💰 Revenue Impact", format_currency(rev_impact))
@@ -58,8 +59,19 @@ def render() -> None:
             with col4:
                 service_impact = result.get("service_impact", 0)
                 st.metric("📊 Service Level", format_percentage(service_impact))
+            with col5:
+                resil_impact = result.get("resilience_impact", 0)
+                st.metric("🛡️ Resilience", f"{resil_impact:+.1f} pts")
 
             st.markdown("---")
+            st.markdown("### Mitigation Actions")
+            actions = result.get("mitigation_actions", [])
+            if actions:
+                for action in actions:
+                    st.markdown(f"- {action}")
+            else:
+                st.write("No specific mitigation actions recommended.")
+
             st.markdown("### Summary")
             st.info(result.get("summary", "No summary available."))
         else:

@@ -18,4 +18,6 @@ class SimulationResponse(BaseModel):
     inventory_impact: float
     delay_impact: float
     service_impact: float
+    resilience_impact: float
+    mitigation_actions: list[str]
     summary: str
