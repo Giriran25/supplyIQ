@@ -18,6 +18,8 @@ from app.services.analytics import AnalyticsService
 router = APIRouter()
 
 
+from app.core.cache import analytics_cache
+
 @router.get(
     "/kpis",
     response_model=AnalyticsResponse,
@@ -32,9 +34,16 @@ async def get_kpis(
 ) -> AnalyticsResponse:
     """Get KPI summary for the organization."""
     try:
+        cache_key = f"kpis_{start_date}_{end_date}_{region}"
+        if cache_key in analytics_cache:
+            return analytics_cache[cache_key]
+
         request = AnalyticsRequest(start_date=start_date, end_date=end_date, region=region)
         service = AnalyticsService(db)
-        return service.get_kpis(request)
+        result = service.get_kpis(request)
+        
+        analytics_cache[cache_key] = result
+        return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"KPI calculation failed: {str(e)}")
 

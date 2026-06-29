@@ -10,7 +10,12 @@ from app.services.risk import SupplierRiskService
 router = APIRouter()
 
 
-@router.get("/supplier/{supplier_id}", response_model=SupplierRiskResponse)
+@router.get(
+    "/supplier/{supplier_id}", 
+    response_model=SupplierRiskResponse,
+    summary="Get Supplier Risk Score",
+    description="Computes a risk profile for a specific supplier based on historical delivery performance, delays, and variance."
+)
 async def get_supplier_risk(supplier_id: int, db: Session = Depends(get_db)) -> SupplierRiskResponse:
     service = SupplierRiskService(db)
     result = service.get_supplier_risk(supplier_id)

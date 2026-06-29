@@ -10,7 +10,6 @@ import logging
 from pathlib import Path
 
 import joblib
-import numpy as np
 from sqlalchemy.orm import Session
 
 from app.api.schemas.prediction import DelayPredictionRequest, DelayPredictionResponse

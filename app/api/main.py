@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.logging import logger
@@ -33,6 +33,9 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+from app.core.middleware import LoggingMiddleware
+from fastapi.responses import JSONResponse
+
 # CORS middleware for dashboard access
 app.add_middleware(
     CORSMiddleware,
@@ -41,6 +44,17 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Logging middleware
+app.add_middleware(LoggingMiddleware)
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    logger.error(f"Unhandled exception: {str(exc)}")
+    return JSONResponse(
+        status_code=500,
+        content={"error": {"code": 500, "message": "Internal Server Error"}}
+    )
 
 # Health and status
 app.include_router(health_router, tags=["Health"])

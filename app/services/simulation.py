@@ -18,7 +18,6 @@ from sqlalchemy import func, cast, Float, case
 from sqlalchemy.orm import Session
 
 from app.api.schemas.simulation import SimulationRequest, SimulationResponse
-from app.models.order import Order
 from app.models.order_item import OrderItem
 from app.models.shipment import Shipment
 

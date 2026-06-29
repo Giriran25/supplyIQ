@@ -6,12 +6,11 @@ connection is available. Falls back to hardcoded stub data otherwise.
 from __future__ import annotations
 
 import logging
-from sqlalchemy import func, case, cast, Float, text
+from sqlalchemy import func, case, cast, Float
 from sqlalchemy.orm import Session
 
 from app.api.schemas.risk import SupplierRiskResponse
 from app.models.shipment import Shipment
-from app.models.order import Order
 
 logger = logging.getLogger("supplychainiq.risk")
 
