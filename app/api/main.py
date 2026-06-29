@@ -5,18 +5,17 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.logging import logger
 from app.api.health import router as health_router
-from app.api.routes import analytics, predictions
-
 
 from contextlib import asynccontextmanager
 from app.api.routes import (
     analytics,
-    predictions,
     copilot,
     data_platform,
+    predictions,
     resilience,
     risk,
     simulation,
+    suppliers,
 )
 
 @asynccontextmanager
@@ -46,7 +45,7 @@ app.add_middleware(
 # Health and status
 app.include_router(health_router, tags=["Health"])
 
-# ... inside app initialization area, add routers
+# API routes
 app.include_router(analytics.router, prefix="/api/analytics", tags=["Analytics"])
 app.include_router(predictions.router, prefix="/api/prediction", tags=["Prediction"])
 app.include_router(copilot.router, prefix="/api/copilot", tags=["Copilot"])
@@ -54,3 +53,4 @@ app.include_router(data_platform.router, prefix="/api/data", tags=["Data Platfor
 app.include_router(resilience.router, prefix="/api/resilience", tags=["Resilience"])
 app.include_router(risk.router, prefix="/api/risk", tags=["Risk"])
 app.include_router(simulation.router, prefix="/api/simulation", tags=["Simulation"])
+app.include_router(suppliers.router, prefix="/api/suppliers", tags=["Suppliers"])

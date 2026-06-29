@@ -161,6 +161,83 @@ def predict_delay(
         return None
 
 
+@st.cache_data(ttl=300)
+def get_supplier_risk(supplier_id: int) -> Dict[str, Any] | None:
+    """Fetch supplier risk assessment from the risk endpoint."""
+    try:
+        response = requests.get(
+            f"{API_BASE_URL}/api/risk/supplier/{supplier_id}", timeout=10
+        )
+        response.raise_for_status()
+        return response.json()
+    except requests.exceptions.RequestException as e:
+        st.error(f"Failed to fetch supplier risk: {str(e)}")
+        return None
+
+
+@st.cache_data(ttl=300)
+def get_scri() -> Dict[str, Any] | None:
+    """Fetch Supply Chain Resilience Index from the resilience endpoint."""
+    try:
+        response = requests.get(
+            f"{API_BASE_URL}/api/resilience/scri", timeout=10
+        )
+        response.raise_for_status()
+        return response.json()
+    except requests.exceptions.RequestException as e:
+        st.error(f"Failed to fetch SCRI: {str(e)}")
+        return None
+
+
+def run_simulation(
+    scenario_type: str,
+    supplier_id: Optional[int] = None,
+    product_id: Optional[int] = None,
+    region: Optional[str] = None,
+    impact_horizon_days: int = 30,
+) -> Dict[str, Any] | None:
+    """Run a disruption scenario simulation."""
+    try:
+        payload: Dict[str, Any] = {
+            "scenario_type": scenario_type,
+            "impact_horizon_days": impact_horizon_days,
+        }
+        if supplier_id is not None:
+            payload["supplier_id"] = supplier_id
+        if product_id is not None:
+            payload["product_id"] = product_id
+        if region is not None:
+            payload["region"] = region
+
+        response = requests.post(
+            f"{API_BASE_URL}/api/simulation/run", json=payload, timeout=15
+        )
+        response.raise_for_status()
+        return response.json()
+    except requests.exceptions.RequestException as e:
+        st.error(f"Failed to run simulation: {str(e)}")
+        return None
+
+
+def query_copilot(
+    query: str,
+    context_filter: Optional[Dict[str, str]] = None,
+) -> Dict[str, Any] | None:
+    """Send a query to the AI Copilot endpoint."""
+    try:
+        payload: Dict[str, Any] = {"query": query}
+        if context_filter:
+            payload["context_filter"] = context_filter
+        response = requests.post(
+            f"{API_BASE_URL}/api/copilot/query", json=payload, timeout=30
+        )
+        response.raise_for_status()
+        return response.json()
+    except requests.exceptions.RequestException as e:
+        st.error(f"Failed to query copilot: {str(e)}")
+        return None
+
+
 def format_currency(value: float) -> str:
     """Format value as currency."""
     return f"${value:,.2f}" if value >= 0 else f"-${abs(value):,.2f}"
