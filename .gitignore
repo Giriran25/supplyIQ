@@ -16,3 +16,4 @@ data/profiles/
 *.db
 **/__pycache__/
 **/*.py[cod]
+models/
