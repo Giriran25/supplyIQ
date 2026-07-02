@@ -18,9 +18,14 @@ from app.api.routes import (
     suppliers,
 )
 
+from app.core.database import engine
+from app.models import Base  # noqa: F401 – ensures all models are registered
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("Starting SupplyChainIQ API")
+    Base.metadata.create_all(bind=engine)
+    logger.info("Database tables verified/created")
     yield
     logger.info("Shutting down SupplyChainIQ API")
 
@@ -57,7 +62,7 @@ async def global_exception_handler(request: Request, exc: Exception):
     )
 
 # Health and status
-app.include_router(health_router, tags=["Health"])
+app.include_router(health_router, prefix="/api", tags=["Health"])
 
 # API routes
 app.include_router(analytics.router, prefix="/api/analytics", tags=["Analytics"])

@@ -30,14 +30,18 @@ def upsert_rows(
     if not rows:
         return 0
 
-    stmt = pg_insert(table).values(rows)
-    update_values = {col: getattr(stmt.excluded, col) for col in update_columns}
-    stmt = stmt.on_conflict_do_update(index_elements=conflict_columns, set_=update_values)
+    total_loaded = 0
+    batch_size = 1000
 
     try:
-        result = session.execute(stmt)
-        session.flush()
-        return len(rows)
+        for batch in batch_rows(rows, batch_size):
+            stmt = pg_insert(table).values(batch)
+            update_values = {col: getattr(stmt.excluded, col) for col in update_columns}
+            stmt = stmt.on_conflict_do_update(index_elements=conflict_columns, set_=update_values)
+            session.execute(stmt)
+            session.flush()
+            total_loaded += len(batch)
+        return total_loaded
     except IntegrityError as exc:
         session.rollback()
         for row in rows:
@@ -55,11 +59,31 @@ def upsert_rows(
 
 
 def fetch_existing_ids(session: Session, table_name: str, ids: set[int]) -> set[int]:
+    """
+    Fetch existing primary keys from a table in batches to avoid generating
+    extremely large SQL IN (...) clauses that exceed PostgreSQL/SQLAlchemy
+    parameter limits.
+    """
     if not ids:
         return set()
+
     table = reflect_table(session.bind, table_name)
-    result = session.execute(select(table.c.id).where(table.c.id.in_(ids)))
-    return {row[0] for row in result.fetchall()}
+
+    existing_ids: set[int] = set()
+    batch_size = 1000
+
+    ids_list = list(ids)
+
+    for start in range(0, len(ids_list), batch_size):
+        batch = ids_list[start:start + batch_size]
+
+        result = session.execute(
+            select(table.c.id).where(table.c.id.in_(batch))
+        )
+
+        existing_ids.update(row[0] for row in result.fetchall())
+
+    return existing_ids
 
 
 def filter_by_parent_key(
@@ -123,10 +147,17 @@ def load_departments(session: Session, engine: Engine, rows: list[dict[str, obje
 
 def load_customers(session: Session, engine: Engine, rows: list[dict[str, object]], job_id: str) -> int:
     table = reflect_table(engine, "customers")
+    normalized_rows = [
+        {
+            **row,
+            "last_name": row.get("last_name") or "UNKNOWN",
+        }
+        for row in rows
+    ]
     return upsert_rows(
         session,
         table,
-        rows,
+        normalized_rows,
         conflict_columns=["id"],
         update_columns=[
             "first_name",

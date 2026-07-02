@@ -8,7 +8,6 @@ from app.streamlit_app.utils import get_product_analytics, format_currency
 
 
 def render() -> None:
-    st.set_page_config(layout="wide")
     st.title("📦 Product Analytics")
     st.subheader("Product Performance & Sales Trends")
 

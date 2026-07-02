@@ -21,7 +21,7 @@ import hashlib
 )
 async def run_simulation(request: SimulationRequest, db: Session = Depends(get_db)) -> SimulationResponse:
     # Build cache key from request parameters
-    req_str = f"{request.scenario_type}_{request.horizon_days}_{request.supplier_id}_{request.demand_multiplier}"
+    req_str = f"{request.scenario_type}_{request.impact_horizon_days}_{request.supplier_id}_{request.region}"
     cache_key = hashlib.md5(req_str.encode()).hexdigest()
     
     if cache_key in simulation_cache:

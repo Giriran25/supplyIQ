@@ -11,8 +11,9 @@ import requests
 from typing import Optional, Dict, Any
 from datetime import datetime, timedelta
 
+import os
 
-API_BASE_URL = "http://localhost:8000"
+API_BASE_URL = os.environ.get("API_BASE_URL", "http://localhost:8000")
 
 
 @st.cache_data(ttl=300)  # Cache for 5 minutes

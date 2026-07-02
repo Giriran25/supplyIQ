@@ -8,7 +8,6 @@ from app.streamlit_app.utils import get_kpis, get_category_analytics, get_produc
 
 
 def render() -> None:
-    st.set_page_config(layout="wide")
     st.title("📊 Executive Dashboard")
     st.subheader("Real-time Supply Chain Intelligence")
 

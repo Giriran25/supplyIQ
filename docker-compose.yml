@@ -35,6 +35,8 @@ services:
     env_file:
       - .env
 
+    working_dir: /app
+
     volumes:
       - .:/app
 
@@ -46,6 +48,39 @@ services:
 
     ports:
       - "8000:8000"
+
+    restart: unless-stopped
+
+  streamlit:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    container_name: supplyiq-streamlit
+
+    depends_on:
+      - api
+
+    env_file:
+      - .env
+
+    working_dir: /app
+
+    environment:
+      API_BASE_URL: http://api:8000
+      PYTHONPATH: /app
+
+    volumes:
+      - .:/app
+
+    command: >
+      python -m streamlit run app/streamlit_app/main.py
+      --server.port=8501
+      --server.address=0.0.0.0
+      --server.headless=true
+
+    ports:
+      - "8501:8501"
 
     restart: unless-stopped
 

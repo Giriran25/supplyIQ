@@ -9,7 +9,10 @@ import json
 import logging
 from typing import Tuple, List
 
-from openai import OpenAI
+try:
+    from openai import OpenAI
+except ImportError:
+    OpenAI = None  # type: ignore[assignment,misc]
 from sqlalchemy.orm import Session
 
 from app.api.schemas.copilot import CopilotRequest, CopilotResponse
@@ -26,7 +29,7 @@ class CopilotService:
     def __init__(self, db: Session) -> None:
         self.db = db
         # Handle case where API key is not provided (e.g., None or empty string)
-        self.has_llm = bool(settings.openai_api_key and settings.openai_api_key.strip())
+        self.has_llm = bool(OpenAI is not None and settings.openai_api_key and settings.openai_api_key.strip())
         self.client = OpenAI(api_key=settings.openai_api_key) if self.has_llm else None
 
     def answer_query(self, request: CopilotRequest) -> CopilotResponse:

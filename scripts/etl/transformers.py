@@ -30,7 +30,7 @@ def transform_customer(row: dict[str, object]) -> dict[str, object]:
     return {
         "id": to_int(row["customer_id"]),
         "first_name": clean_string(row["customer_first_name"]),
-        "last_name": clean_string(row["customer_last_name"]),
+        "last_name": clean_string(row["customer_last_name"]) or "UNKNOWN",
         "email": clean_masked_pii(row["customer_email"]),
         "password_hash": clean_masked_pii(row["customer_password"]),
         "segment": normalize_enum(row["customer_segment"]),

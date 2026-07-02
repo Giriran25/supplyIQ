@@ -259,9 +259,10 @@ def load_phase(engine: Engine, job_id: str, payloads: dict[str, list[dict[str, A
             stage="LOAD_SHIPMENTS",
             target_table="shipments",
         )
-        loaded = load_shipments(session, engine, shipments, job_id)
-        total_loaded += loaded
-        session.commit()
+        for batch in batch_rows(shipments, settings.batch_size):
+            loaded = load_shipments(session, engine, batch, job_id)
+            total_loaded += loaded
+            session.commit()
 
         update_etl_job(session, job_id, rows_loaded=total_loaded)
 

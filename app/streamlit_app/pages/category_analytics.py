@@ -8,7 +8,6 @@ from app.streamlit_app.utils import get_category_analytics, format_currency
 
 
 def render() -> None:
-    st.set_page_config(layout="wide")
     st.title("🏷️ Category Analytics")
     st.subheader("Category Performance & Market Breakdown")
 

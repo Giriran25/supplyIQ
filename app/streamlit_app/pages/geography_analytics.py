@@ -8,7 +8,6 @@ from app.streamlit_app.utils import get_geography_analytics, format_currency, fo
 
 
 def render() -> None:
-    st.set_page_config(layout="wide")
     st.title("🌍 Geography Analytics")
     st.subheader("Regional Performance & Delivery Metrics")
 

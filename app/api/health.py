@@ -31,7 +31,7 @@ def health_check(db: Session = Depends(get_db)) -> dict:
         etl_status = f"error: {str(e)}"
 
     # Model availability check
-    model_path = os.path.join("models", "xgboost_delay_model.json")
+    model_path = os.path.join("models", "delay_model.joblib")
     model_status = "available" if os.path.exists(model_path) else "missing"
 
     uptime = (datetime.utcnow() - START_TIME).total_seconds()
